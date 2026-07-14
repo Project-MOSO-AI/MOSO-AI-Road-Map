@@ -1,8 +1,34 @@
-# MOSO AI Roadmap
+<p align="center">
+  <img src="https://avatars.githubusercontent.com/u/304306045?s=400&v=4" alt="MOSO AI" width="120" style="border-radius: 24px;" />
+</p>
 
-A visual project control center for tracking the MOSO AI technology roadmap, built with React, Vite, and TypeScript.
+<h1 align="center">MOSO AI Roadmap</h1>
 
-## Quick Start (Local)
+<p align="center">
+  Visual project control center for tracking the MOSO AI technology roadmap.<br/>
+  <a href="https://moso-ai-road-map.vercel.app"><strong>View Live →</strong></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-6-646CFF?logo=vite" alt="Vite" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Zustand-State-black" alt="Zustand" />
+  <img src="https://img.shields.io/badge/Supabase-Auth-3FCF8E?logo=supabase" alt="Supabase" />
+</p>
+
+---
+
+## Features
+
+- Interactive technology tree with expandable nodes
+- GitHub OAuth login with owner/viewer roles
+- Real-time state sync via Supabase
+- Timer tracking for work sessions
+- Task completion workflow
+- Role-based access control
+
+## Quick Start
 
 ```bash
 git clone https://github.com/Project-MOSO-AI/MOSO-AI-Road-Map.git
@@ -11,57 +37,29 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173 in your browser.
+Open http://localhost:5173
 
-## Build for Production
+## Environment Variables
 
-```bash
-npm run build
-npm run preview    # serves the built output on localhost:4173
+Create a `.env` file:
+
 ```
-
-## Host Online (Tailscale Funnel)
-
-Your laptop becomes the server. When it's on and online, the site is live. When it's off, the site goes down. Same URL every time.
-
-**Live URL:** https://oxk.tail8d4074.ts.net
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) installed
-- [Tailscale](https://tailscale.com/download/windows) installed and signed in
-- Funnel enabled on your Tailscale account (one-time: visit the link shown in `tailscale funnel` output)
-
-### Manual Start
-
-Double-click `start-moso.bat`. It builds the site, starts a local server, and enables the Tailscale Funnel.
-
-### Auto-Start on Boot
-
-A Windows Scheduled Task (`MOSO Tunnel`) is already configured to run `start-moso.bat` at login. The site auto-starts when you log into Windows.
-
-To re-register the task (run once in PowerShell as Administrator):
-
-```powershell
-$scheduledTask = "MOSO Tunnel"
-Unregister-ScheduledTask -TaskName $scheduledTask -Confirm:$false -ErrorAction SilentlyContinue
-$action = New-ScheduledTaskAction -Execute "C:\Users\hshar\Documents\MOSO AI Roadmap\start-moso.bat"
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
-Register-ScheduledTask -TaskName $scheduledTask -Action $action -Trigger $trigger -Settings $settings -Description "Start MOSO AI Roadmap tunnel on login"
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
-
-### How It Works
-
-1. `start-moso.bat` runs `npm install`, `vite build`, starts the preview server on port 3000
-2. `tailscale funnel --bg --yes 3000` exposes port 3000 to the internet via Tailscale
-3. The Scheduled Task runs the script automatically at login
-4. When your laptop goes offline, the site goes down. When it's back online, the same URL works again.
 
 ## Tech Stack
 
-- React 18 + TypeScript
-- Vite
-- Zustand (state)
-- Recharts (charts)
-- Lucide (icons)
+- **React 18** + **TypeScript** — UI
+- **Vite** — build tool
+- **Zustand** — state management
+- **Supabase** — auth & realtime sync
+- **Vercel** — hosting
+
+## Deployment
+
+Auto-deploys from `master` on push. Connected via Vercel.
+
+## License
+
+MIT
