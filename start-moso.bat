@@ -13,5 +13,5 @@ echo [MOSO] Waiting for container...
 timeout /t 3 /nobreak >nul
 
 echo [MOSO] Starting Cloudflare Tunnel...
-echo. > tunnel-url.txt
-cloudflared tunnel --url http://localhost:8080 > tunnel-log.txt 2>&1
+echo Check tunnel-log.txt for your public URL after a few seconds.
+"C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8080 > tunnel-log.txt 2>&1
