@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
-const ORG = "Project-MOSO-AI";
+const OWNER_LOGINS = ["Harsha240105", "MdShaharali"];
 
 export interface Profile {
   user_id: string;
@@ -54,24 +54,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const login: string | null = meta?.login ?? meta?.user_name ?? null;
     const avatar: string | null = meta?.avatar_url ?? null;
     const name: string | null = meta?.full_name ?? meta?.name ?? login;
+    const isOrgOwner = login !== null && OWNER_LOGINS.includes(login);
 
     let { data } = await supabase.from("profiles").select("*").eq("user_id", authUser.id).single();
 
     if (!data) {
       const { data: inserted } = await supabase
         .from("profiles")
-        .insert({ user_id: authUser.id, role: "viewer", display_name: name, avatar_url: avatar, login })
+        .insert({ user_id: authUser.id, role: isOrgOwner ? "owner" : "viewer", display_name: name, avatar_url: avatar, login })
         .select()
         .single();
       data = inserted;
-    }
-
-    if (data && login) {
-      const { isMember, token } = await checkOrgMembership(login, authUser);
-      if (isMember && data.role !== "owner") {
-        await supabase.from("profiles").update({ role: "owner" }).eq("user_id", authUser.id);
-        data = { ...data, role: "owner" };
-      }
+    } else if (isOrgOwner && data.role !== "owner") {
+      await supabase.from("profiles").update({ role: "owner" }).eq("user_id", authUser.id);
+      data = { ...data, role: "owner" };
     }
 
     setProfile(data);
@@ -81,10 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGitHub = useCallback(async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
-      options: {
-        redirectTo: window.location.origin,
-        scopes: "read:org",
-      },
+      options: { redirectTo: window.location.origin },
     });
     if (error) console.error("OAuth error:", error.message);
   }, []);
@@ -100,38 +93,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-let orgCache: Record<string, { isMember: boolean; token: string | null }> = {};
-
-async function checkOrgMembership(login: string, authUser: User): Promise<{ isMember: boolean; token: string | null }> {
-  if (login in orgCache) return orgCache[login];
-
-  // 1) Try with the user's GitHub provider token (catches private memberships)
-  const providerToken = (authUser as any).identities?.[0]?.identity_data?.access_token
-    ?? (authUser as any).app_metadata?.provider_token
-    ?? null;
-
-  if (providerToken) {
-    try {
-      const res = await fetch(`https://api.github.com/orgs/${ORG}/members/${login}`, {
-        headers: { Authorization: `Bearer ${providerToken}`, Accept: "application/vnd.github+json" },
-      });
-      if (res.status === 204) {
-        orgCache[login] = { isMember: true, token: providerToken };
-        return { isMember: true, token: providerToken };
-      }
-    } catch {}
-  }
-
-  // 2) Fall back to public membership check
-  try {
-    const res = await fetch(`https://api.github.com/orgs/${ORG}/public_members/${login}`);
-    const ok = res.status === 204;
-    orgCache[login] = { isMember: ok, token: providerToken };
-    return { isMember: ok, token: providerToken };
-  } catch {
-    orgCache[login] = { isMember: false, token: providerToken };
-    return { isMember: false, token: providerToken };
-  }
 }

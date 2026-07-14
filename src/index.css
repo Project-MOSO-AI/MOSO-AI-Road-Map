@@ -833,6 +833,27 @@ body {
   gap: 16px;
 }
 
+.gh-card-org {
+  margin-bottom: 8px;
+}
+
+.gh-card-org .gh-avatar-lg {
+  width: 64px;
+  height: 64px;
+}
+
+.github-metrics-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.github-metrics-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
 .github-card {
   display: flex;
   flex-direction: column;

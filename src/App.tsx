@@ -823,47 +823,71 @@ function AppInner() {
             <div className="page-header"><div className="eyebrow">Live</div><h2>GitHub</h2></div>
             {ghStatus === "loading" && <div className="gh-loading">Fetching GitHub data...</div>}
             {ghStatus === "error" && <div className="gh-error">Failed to fetch GitHub data.</div>}
-            <div className="github-grid">
-              {/* Org */}
-              <a className="card github-card gh-clickable" href={ghOrg?.html_url ?? "https://github.com/Project-MOSO-AI"} target="_blank" rel="noreferrer">
-                <div className="gh-header">{ghOrg?.avatar_url && <img className="gh-avatar" src={ghOrg.avatar_url} alt="" />}<div className="gh-info"><div className="gh-name">{ghOrg?.name ?? "Project-MOSO-AI"}</div><div className="gh-type">Organization</div></div></div>
-                {ghOrg?.description && <div className="gh-desc">{ghOrg.description}</div>}
-                <div className="github-metrics">
-                  <div className="gh-metric"><span className="gh-metric-label">Repos</span><span className="gh-metric-value">{ghOrg?.public_repos ?? "—"}</span></div>
-                  <div className="gh-metric"><span className="gh-metric-label">Followers</span><span className="gh-metric-value">{ghOrg?.followers ?? "—"}</span></div>
-                  <div className="gh-metric"><span className="gh-metric-label">Created</span><span className="gh-metric-value">{ghOrg ? fmtDate(ghOrg.created_at) : "—"}</span></div>
-                  <div className="gh-metric"><span className="gh-metric-label">Profile</span><span className="gh-metric-value" style={{ color: "var(--green-primary)" }}>Open ↗</span></div>
+
+            {/* Org Card — full width */}
+            <a className="card github-card gh-clickable gh-card-org" href={ghOrg?.html_url ?? "https://github.com/Project-MOSO-AI"} target="_blank" rel="noreferrer">
+              <div className="gh-header">
+                {ghOrg?.avatar_url && <img className="gh-avatar gh-avatar-lg" src={ghOrg.avatar_url} alt="" />}
+                <div className="gh-info">
+                  <div className="gh-name">{ghOrg?.name ?? "Project-MOSO-AI"}</div>
+                  <div className="gh-type">Organization</div>
                 </div>
-              </a>
+              </div>
+              {ghOrg?.description && <div className="gh-desc">{ghOrg.description}</div>}
+              <div className="github-metrics github-metrics-4">
+                <div className="gh-metric"><span className="gh-metric-label">Repos</span><span className="gh-metric-value">{ghOrg?.public_repos ?? "—"}</span></div>
+                <div className="gh-metric"><span className="gh-metric-label">Followers</span><span className="gh-metric-value">{ghOrg?.followers ?? "—"}</span></div>
+                <div className="gh-metric"><span className="gh-metric-label">Created</span><span className="gh-metric-value">{ghOrg ? fmtDate(ghOrg.created_at) : "—"}</span></div>
+                <div className="gh-metric"><span className="gh-metric-label">Profile</span><span className="gh-metric-value" style={{ color: "var(--green-primary)" }}>Open ↗</span></div>
+              </div>
+            </a>
+
+            <div className="github-grid">
               {/* Repo */}
               <a className="card github-card gh-clickable" href={ghRepo?.html_url ?? "https://github.com/Project-MOSO-AI/MOSO"} target="_blank" rel="noreferrer">
                 <div className="gh-header"><div className="gh-info"><div className="gh-name">{ghRepo?.full_name ?? "Project-MOSO-AI/MOSO"}</div><div className="gh-type">Repository</div></div></div>
                 {ghRepo?.description && <div className="gh-desc">{ghRepo.description}</div>}
-                <div className="github-metrics">
-                  <div className="gh-metric"><span className="gh-metric-label">Stars</span><span className="gh-metric-value" style={{ color: "var(--warning)" }}>★ {ghRepo?.stargazers_count ?? "—"}</span></div>
+                <div className="github-metrics github-metrics-3">
+                  <div className="gh-metric"><span className="gh-metric-label">★ Stars</span><span className="gh-metric-value" style={{ color: "var(--warning)" }}>{ghRepo?.stargazers_count ?? "—"}</span></div>
                   <div className="gh-metric"><span className="gh-metric-label">Forks</span><span className="gh-metric-value">{ghRepo?.forks_count ?? "—"}</span></div>
                   <div className="gh-metric"><span className="gh-metric-label">Issues</span><span className="gh-metric-value">{ghRepo?.open_issues_count ?? "—"}</span></div>
-                  <div className="gh-metric"><span className="gh-metric-label">Language</span><span className="gh-metric-value">{ghRepo?.language ?? "—"}</span></div>
+                </div>
+                <div className="github-metrics github-metrics-3">
+                  <div className="gh-metric"><span className="gh-metric-label">Language</span><span className="gh-metric-value" style={{ color: "var(--green-primary)" }}>{ghRepo?.language ?? "—"}</span></div>
                   <div className="gh-metric"><span className="gh-metric-label">Branch</span><span className="gh-metric-value">{ghRepo?.default_branch ?? "—"}</span></div>
                   <div className="gh-metric"><span className="gh-metric-label">Last Push</span><span className="gh-metric-value">{ghRepo ? fmtDate(ghRepo.pushed_at) : "—"}</span></div>
                 </div>
               </a>
+
               {/* User 1 */}
               <a className="card github-card gh-clickable" href={ghU1?.html_url ?? "https://github.com/Harsha240105"} target="_blank" rel="noreferrer">
-                <div className="gh-header">{ghU1?.avatar_url && <img className="gh-avatar" src={ghU1.avatar_url} alt="" />}<div className="gh-info"><div className="gh-name">{ghU1?.name ?? ghU1?.login ?? "Harsha240105"}</div><div className="gh-type">Contributor</div></div></div>
+                <div className="gh-header">
+                  {ghU1?.avatar_url && <img className="gh-avatar" src={ghU1.avatar_url} alt="" />}
+                  <div className="gh-info">
+                    <div className="gh-name">{ghU1?.name ?? ghU1?.login ?? "Harsha240105"}</div>
+                    <div className="gh-type">Owner · Founder</div>
+                  </div>
+                </div>
                 {ghU1?.bio && <div className="gh-desc">{ghU1.bio}</div>}
-                <div className="github-metrics">
+                <div className="github-metrics github-metrics-4">
                   <div className="gh-metric"><span className="gh-metric-label">Repos</span><span className="gh-metric-value">{ghU1?.public_repos ?? "—"}</span></div>
                   <div className="gh-metric"><span className="gh-metric-label">Followers</span><span className="gh-metric-value">{ghU1?.followers ?? "—"}</span></div>
                   <div className="gh-metric"><span className="gh-metric-label">Following</span><span className="gh-metric-value">{ghU1?.following ?? "—"}</span></div>
                   <div className="gh-metric"><span className="gh-metric-label">Joined</span><span className="gh-metric-value">{ghU1 ? fmtDate(ghU1.created_at) : "—"}</span></div>
                 </div>
               </a>
+
               {/* User 2 */}
               <a className="card github-card gh-clickable" href={ghU2?.html_url ?? "https://github.com/MdShaharali"} target="_blank" rel="noreferrer">
-                <div className="gh-header">{ghU2?.avatar_url && <img className="gh-avatar" src={ghU2.avatar_url} alt="" />}<div className="gh-info"><div className="gh-name">{ghU2?.name ?? ghU2?.login ?? "MdShaharali"}</div><div className="gh-type">Contributor</div></div></div>
+                <div className="gh-header">
+                  {ghU2?.avatar_url && <img className="gh-avatar" src={ghU2.avatar_url} alt="" />}
+                  <div className="gh-info">
+                    <div className="gh-name">{ghU2?.name ?? ghU2?.login ?? "MdShaharali"}</div>
+                    <div className="gh-type">Owner · Contributor</div>
+                  </div>
+                </div>
                 {ghU2?.bio && <div className="gh-desc">{ghU2.bio}</div>}
-                <div className="github-metrics">
+                <div className="github-metrics github-metrics-4">
                   <div className="gh-metric"><span className="gh-metric-label">Repos</span><span className="gh-metric-value">{ghU2?.public_repos ?? "—"}</span></div>
                   <div className="gh-metric"><span className="gh-metric-label">Followers</span><span className="gh-metric-value">{ghU2?.followers ?? "—"}</span></div>
                   <div className="gh-metric"><span className="gh-metric-label">Following</span><span className="gh-metric-value">{ghU2?.following ?? "—"}</span></div>
