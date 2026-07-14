@@ -80,7 +80,6 @@ interface MOSOState {
 
   // Actions — notifications
   addNotification: (message: string, type?: Notification["type"]) => void;
-  dismissNotification: (id: string) => void;
   markAllRead: () => void;
 
   // Actions — navigation
@@ -181,10 +180,6 @@ export const useStore = create<MOSOState>()(
         };
         set((s) => ({ notifications: [n, ...s.notifications].slice(0, 200) }));
       },
-
-      dismissNotification: (id) => set((s) => ({
-        notifications: s.notifications.filter((n) => n.id !== id),
-      })),
 
       markAllRead: () => set((s) => ({
         notifications: s.notifications.map((n) => ({ ...n, read: true })),
