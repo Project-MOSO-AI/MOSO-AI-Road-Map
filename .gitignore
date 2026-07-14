@@ -2,6 +2,7 @@ node_modules
 dist
 .DS_Store
 *.log
+.env
 tunnel-log.txt
 tunnel-url.txt
 serve-log.txt

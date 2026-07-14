@@ -8,6 +8,8 @@ import {
   useStore, DEFAULT_VIEWPORT, todayHours, weeklyHours, monthlyHours,
   calendarData, calendarColor, recentCompleted,
 } from "./store";
+import { useAuth } from "./lib/auth";
+import { useSupabaseSync } from "./lib/sync";
 
 // ──────────────────────────────────────────────────────────────
 // Types
@@ -479,16 +481,59 @@ function NotificationHistory({ onClose }: { onClose: () => void }) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// Login Prompt (modal — not a gate)
+// ──────────────────────────────────────────────────────────────
+
+function LoginPrompt({ onClose, signInWithGitHub, loading }: {
+  onClose: () => void; signInWithGitHub: () => Promise<void>; loading: boolean;
+}) {
+  return (
+    <>
+      <div className="overlay" onClick={onClose} />
+      <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 1001, background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 32, maxWidth: 420, width: "90%", textAlign: "center" }}>
+        <h2 style={{ fontSize: "1.3rem", marginBottom: 8, color: "var(--warning)" }}>Login Required</h2>
+        <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginBottom: 8, lineHeight: 1.6 }}>
+          Only <strong style={{ color: "var(--green-primary)" }}>MOSO AI Org owners</strong> can modify the roadmap.
+        </div>
+        <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginBottom: 24, padding: "10px 14px", background: "rgba(255,193,7,0.08)", borderRadius: 8, border: "1px solid rgba(255,193,7,0.15)" }}>
+          All other users can view but cannot start timers, check tasks, or modify any data.
+        </div>
+        <button className="btn btn-primary" onClick={signInWithGitHub} disabled={loading} style={{ width: "100%", padding: "12px 24px", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          {loading ? "Loading..." : "Sign in with GitHub"}
+        </button>
+        <button className="btn btn-ghost" onClick={onClose} style={{ marginTop: 12, fontSize: "0.75rem" }}>Cancel</button>
+      </div>
+    </>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────
 // App
 // ──────────────────────────────────────────────────────────────
 
 export default function App() {
+  const { loading: authLoading } = useAuth();
+
+  if (authLoading) {
+    return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "var(--bg-main)", color: "var(--green-primary)" }}>Loading...</div>;
+  }
+
+  return <AppInner />;
+}
+
+function AppInner() {
+  const { user, profile, isOwner, signInWithGitHub, signOut } = useAuth();
+  useSupabaseSync();
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showNotifHistory, setShowNotifHistory] = useState(false);
+  const requestLogin = useCallback(() => { if (!user) setShowLoginPrompt(true); }, [user]);
+
   const store = useStore();
   const { currentPage, timerSeconds, timerRunning, sessions, taskStates, selectedNodeId, selectedTechId, notifications, breadcrumb, sidePanelOpen } = store;
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterTech, setFilterTech] = useState("");
-  const [showNotifHistory, setShowNotifHistory] = useState(false);
   const [ghOrg, setGhOrg] = useState<GitHubOrg | null>(null);
   const [ghRepo, setGhRepo] = useState<GitHubRepo | null>(null);
   const [ghU1, setGhU1] = useState<GitHubUser | null>(null);
@@ -536,7 +581,7 @@ export default function App() {
   const recentDone = useMemo(() => recentCompleted(sessions), [sessions]);
   const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
-  const toggleTask = useCallback((nodeId: string, idx: number) => useStore.getState().toggleTask(nodeId, idx), []);
+  const toggleTask = useCallback((nodeId: string, idx: number) => { if (!user) { requestLogin(); return; } if (!isOwner) return; useStore.getState().toggleTask(nodeId, idx); }, [user, isOwner, requestLogin]);
 
   return (
     <div className="app-shell">
@@ -561,10 +606,43 @@ export default function App() {
           <span className={`timer-status-dot${timerRunning ? " running" : " stopped"}`} />
           {timerRunning ? "Session active" : "Session paused"}
         </div>
+        <div style={{ padding: "12px 14px", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 10 }}>
+          {user && profile ? (
+            <>
+              {profile.avatar_url && <img src={profile.avatar_url} alt="" style={{ width: 28, height: 28, borderRadius: "50%" }} />}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "0.72rem", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile.display_name ?? "User"}</div>
+                <div style={{ fontSize: "0.6rem", color: isOwner ? "var(--green-primary)" : "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{profile.role}</div>
+              </div>
+              <button className="btn btn-ghost" onClick={signOut} title="Sign out" style={{ padding: 4 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              </button>
+            </>
+          ) : (
+            <button className="btn btn-primary" onClick={() => setShowLoginPrompt(true)} style={{ width: "100%", fontSize: "0.75rem", padding: "8px 12px" }}>Sign in with GitHub</button>
+          )}
+        </div>
       </aside>
 
       <main className="content">
         <Toasts />
+
+        {/* Profile Bar */}
+        <div className="profile-bar">
+          {user && profile ? (
+            <div className="profile-bar-inner">
+              {profile.avatar_url && <img src={profile.avatar_url} alt="" className="profile-bar-avatar" />}
+              <span className="profile-bar-name">{profile.display_name ?? profile.login ?? "User"}</span>
+              <span className={`profile-bar-role ${profile.role}`}>{profile.role}</span>
+              <button className="btn btn-ghost" onClick={signOut} style={{ marginLeft: 8, fontSize: "0.65rem", padding: "4px 10px" }}>Sign out</button>
+            </div>
+          ) : (
+            <button className="btn btn-primary" onClick={() => setShowLoginPrompt(true)} style={{ fontSize: "0.72rem", padding: "6px 16px" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+              Sign in with GitHub
+            </button>
+          )}
+        </div>
 
         {/* ═══ Dashboard ═══ */}
         {currentPage === "dashboard" && (
@@ -582,11 +660,11 @@ export default function App() {
                 </div>
                 <div className="timer-actions">
                   {!timerRunning ? (
-                    <button className="btn btn-primary" onClick={() => store.startTimer()}><I.Play /> {timerSeconds > 0 ? "Resume" : "Start"}</button>
+                    <button className="btn btn-primary" onClick={() => { if (!user) { requestLogin(); return; } if (!isOwner) return; store.startTimer(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}><I.Play /> {timerSeconds > 0 ? "Resume" : "Start"}</button>
                   ) : (
-                    <button className="btn btn-warning" onClick={() => store.pauseTimer()}><I.Pause /> Pause</button>
+                    <button className="btn btn-warning" onClick={() => { if (!user) { requestLogin(); return; } if (!isOwner) return; store.pauseTimer(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}><I.Pause /> Pause</button>
                   )}
-                  <button className="btn btn-danger" onClick={() => store.stopTimer()}><I.Stop /> Stop</button>
+                  <button className="btn btn-danger" onClick={() => { if (!user) { requestLogin(); return; } if (!isOwner) return; store.stopTimer(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}><I.Stop /> Stop</button>
                 </div>
               </div>
             </div>
@@ -787,7 +865,7 @@ export default function App() {
                 Sessions: {sessions.length} · Notifications: {notifications.length} · Tasks: {Object.keys(taskStates).length}
               </div>
               <div style={{ marginTop: 12 }}>
-                <button className="btn btn-danger" onClick={() => { localStorage.clear(); location.reload(); }}>Clear All Data & Reload</button>
+                <button className="btn btn-danger" onClick={() => { if (!user) { requestLogin(); return; } if (!isOwner) return; localStorage.clear(); location.reload(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}>Clear All Data & Reload</button>
               </div>
             </div>
           </section>
@@ -821,7 +899,7 @@ export default function App() {
               {selectedNode.techs.length > 0 && <div className="side-section"><h4>Technologies</h4><div className="tag-list">{selectedNode.techs.map((t) => <span key={t} className="tag" style={{ cursor: "pointer" }} onClick={() => { const td = TECHS.find((x) => x.name === t); if (td) { store.selectTech(td.id); store.setBreadcrumb(["MOSO Core", t]); } }}>{t}</span>)}</div></div>}
               {selectedNode.sourceFiles.length > 0 && <div className="side-section"><h4>Source Files</h4><div className="file-list">{selectedNode.sourceFiles.map((f) => <div key={f} className="file-item">{f}</div>)}</div></div>}
               {selectedNode.githubFolder && <div className="side-section"><h4>GitHub Folder</h4><div style={{ fontSize: "0.8rem", color: "var(--green-primary)", fontFamily: "monospace" }}>{selectedNode.githubFolder}</div></div>}
-              {selectedNode.tasks.length > 0 && <div className="side-section"><h4>Tasks</h4><div className="task-list">{selectedNode.tasks.map((task, i) => { const done = taskStates[`${selectedNode.id}-${i}`] ?? task.done; return <div key={i} className={`task-item${done ? " done" : ""}`} onClick={() => toggleTask(selectedNode.id, i)}><div className="task-checkbox">{done ? "✓" : ""}</div><span className="task-label">{task.label}</span></div>; })}</div></div>}
+              {selectedNode.tasks.length > 0 && <div className="side-section"><h4>Tasks</h4><div className="task-list">{selectedNode.tasks.map((task, i) => { const done = taskStates[`${selectedNode.id}-${i}`] ?? task.done; return <div key={i} className={`task-item${done ? " done" : ""}${!isOwner ? " viewer" : ""}`} onClick={() => toggleTask(selectedNode.id, i)} style={!user ? { cursor: "pointer" } : {}}><div className="task-checkbox">{done ? "✓" : ""}</div><span className="task-label">{task.label}</span></div>; })}</div></div>}
               {selectedNode.children.length > 0 && <div className="side-section"><h4>Sub-Nodes ({selectedNode.children.length})</h4><div className="dep-list">{selectedNode.children.map((ch) => <div key={ch.id} className="dep-item" style={{ cursor: "pointer" }} onClick={() => { store.selectNode(ch.id); store.setBreadcrumb(getBreadcrumb(ch.id)); }}><span style={{ color: sc(ch.status) }}>{ch.completion}%</span> {ch.label}<span className={`status-pill ${ch.status}`} style={{ marginLeft: "auto", fontSize: "0.55rem", padding: "2px 8px" }}>{STATUS_LABEL[ch.status]}</span></div>)}</div></div>}
             </div>
           </div>
@@ -855,6 +933,10 @@ export default function App() {
             <NotificationHistory onClose={() => setShowNotifHistory(false)} />
           </div>
         </>
+      )}
+
+      {showLoginPrompt && (
+        <LoginPrompt onClose={() => setShowLoginPrompt(false)} signInWithGitHub={signInWithGitHub} loading={false} />
       )}
     </div>
   );
