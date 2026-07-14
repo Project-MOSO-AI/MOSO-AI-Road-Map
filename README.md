@@ -20,40 +20,43 @@ npm run build
 npm run preview    # serves the built output on localhost:4173
 ```
 
-## Host Online (Cloudflare Tunnel)
+## Host Online (Tailscale Funnel)
 
-Your laptop becomes the server. When it's on and online, the site is live. When it's off, the site goes down.
+Your laptop becomes the server. When it's on and online, the site is live. When it's off, the site goes down. Same URL every time.
+
+**Live URL:** https://oxk.tail8d4074.ts.net
 
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) installed
-- [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) installed
+- [Tailscale](https://tailscale.com/download/windows) installed and signed in
+- Funnel enabled on your Tailscale account (one-time: visit the link shown in `tailscale funnel` output)
 
 ### Manual Start
 
-Double-click `start-moso.bat`. It builds the site, starts a local server, and opens a Cloudflare tunnel. Your public URL will appear in the console window (e.g. `https://xxxxx.trycloudflare.com`).
+Double-click `start-moso.bat`. It builds the site, starts a local server, and enables the Tailscale Funnel.
 
 ### Auto-Start on Boot
 
-Run this once in PowerShell (as Administrator):
+A Windows Scheduled Task (`MOSO Tunnel`) is already configured to run `start-moso.bat` at login. The site auto-starts when you log into Windows.
+
+To re-register the task (run once in PowerShell as Administrator):
 
 ```powershell
+$scheduledTask = "MOSO Tunnel"
+Unregister-ScheduledTask -TaskName $scheduledTask -Confirm:$false -ErrorAction SilentlyContinue
 $action = New-ScheduledTaskAction -Execute "C:\Users\hshar\Documents\MOSO AI Roadmap\start-moso.bat"
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
-Register-ScheduledTask -TaskName "MOSO Tunnel" -Action $action -Trigger $trigger -Settings $settings -Description "Start MOSO AI Roadmap tunnel on login"
+Register-ScheduledTask -TaskName $scheduledTask -Action $action -Trigger $trigger -Settings $settings -Description "Start MOSO AI Roadmap tunnel on login"
 ```
-
-After reboot, the tunnel starts automatically. The URL appears in the console window.
 
 ### How It Works
 
-1. `start-moso.bat` runs `npm run build`, serves the `dist/` folder, and launches `cloudflared`
-2. `cloudflared` creates a free tunnel to `*.trycloudflare.com`
-3. The Scheduled Task runs the script at login
-4. When your laptop goes offline, the tunnel dies. When it reconnects, reboot or re-run the script.
-
-> **Note:** Free tunnels give a new URL on each restart. For a fixed URL, buy a domain (~$10/yr) and set up a named Cloudflare tunnel.
+1. `start-moso.bat` runs `npm install`, `vite build`, starts the preview server on port 3000
+2. `tailscale funnel --bg --yes 3000` exposes port 3000 to the internet via Tailscale
+3. The Scheduled Task runs the script automatically at login
+4. When your laptop goes offline, the site goes down. When it's back online, the same URL works again.
 
 ## Tech Stack
 

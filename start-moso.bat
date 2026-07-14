@@ -14,11 +14,14 @@ start "" /b cmd /c "cd /d "%~dp0" && node_modules\.bin\vite.cmd preview --port 3
 echo [MOSO] Waiting for server...
 timeout /t 5 /nobreak >nul
 
-echo [MOSO] Starting Cloudflare Tunnel...
+echo [MOSO] Starting Tailscale Funnel...
 echo.
 echo ============================================
-echo   Your site will be live at:
-echo   (check tunnel-log.txt for the URL)
+echo   Your site is LIVE at:
+echo   https://oxk.tail8d4074.ts.net
 echo ============================================
 echo.
-"C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:3000
+"C:\Program Files\Tailscale\tailscale.exe" funnel --bg --yes 3000
+echo.
+echo [MOSO] Tunnel started. Site is live!
+pause
