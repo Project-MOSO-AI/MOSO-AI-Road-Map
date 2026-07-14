@@ -1616,6 +1616,25 @@ body {
   box-shadow: 0 0 24px rgba(0,255,136,0.12), 0 8px 32px rgba(0,0,0,0.3);
 }
 
+.gh-follow-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-top: 12px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.gh-follow-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,255,136,0.3);
+}
+
 /* ── Notification History ── */
 .notification-history {
   display: flex;

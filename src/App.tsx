@@ -877,40 +877,52 @@ function AppInner() {
               </a>
 
               {/* User 1 */}
-              <a className="card github-card gh-clickable" href={ghU1?.html_url ?? "https://github.com/Harsha240105"} target="_blank" rel="noreferrer">
-                <div className="gh-header">
-                  {ghU1?.avatar_url && <img className="gh-avatar" src={ghU1.avatar_url} alt="" />}
-                  <div className="gh-info">
-                    <div className="gh-name">{ghU1?.name ?? ghU1?.login ?? "Harsha240105"}</div>
-                    <div className="gh-type">Owner · Founder</div>
+              <div className="card github-card">
+                <a className="gh-clickable" href={ghU1?.html_url ?? "https://github.com/Harsha240105"} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
+                  <div className="gh-header">
+                    {ghU1?.avatar_url && <img className="gh-avatar" src={ghU1.avatar_url} alt="" />}
+                    <div className="gh-info">
+                      <div className="gh-name">{ghU1?.name ?? ghU1?.login ?? "Harsha240105"}</div>
+                      <div className="gh-type">Owner · Founder</div>
+                    </div>
                   </div>
-                </div>
-                {ghU1?.bio && <div className="gh-desc">{ghU1.bio}</div>}
-                <div className="github-metrics github-metrics-4">
-                  <div className="gh-metric"><span className="gh-metric-label">Repos</span><span className="gh-metric-value">{ghU1?.public_repos ?? "—"}</span></div>
-                  <div className="gh-metric"><span className="gh-metric-label">Followers</span><span className="gh-metric-value">{ghU1?.followers ?? "—"}</span></div>
-                  <div className="gh-metric"><span className="gh-metric-label">Following</span><span className="gh-metric-value">{ghU1?.following ?? "—"}</span></div>
-                  <div className="gh-metric"><span className="gh-metric-label">Joined</span><span className="gh-metric-value">{ghU1 ? fmtDate(ghU1.created_at) : "—"}</span></div>
-                </div>
-              </a>
+                  {ghU1?.bio && <div className="gh-desc">{ghU1.bio}</div>}
+                  <div className="github-metrics github-metrics-4">
+                    <div className="gh-metric"><span className="gh-metric-label">Repos</span><span className="gh-metric-value">{ghU1?.public_repos ?? "—"}</span></div>
+                    <div className="gh-metric"><span className="gh-metric-label">Followers</span><span className="gh-metric-value">{ghU1?.followers ?? "—"}</span></div>
+                    <div className="gh-metric"><span className="gh-metric-label">Following</span><span className="gh-metric-value">{ghU1?.following ?? "—"}</span></div>
+                    <div className="gh-metric"><span className="gh-metric-label">Joined</span><span className="gh-metric-value">{ghU1 ? fmtDate(ghU1.created_at) : "—"}</span></div>
+                  </div>
+                </a>
+                <a className="btn btn-primary gh-follow-btn" href={`https://github.com/follow/Harsha240105`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                  Follow
+                </a>
+              </div>
 
               {/* User 2 */}
-              <a className="card github-card gh-clickable" href={ghU2?.html_url ?? "https://github.com/MdShaharali"} target="_blank" rel="noreferrer">
-                <div className="gh-header">
-                  {ghU2?.avatar_url && <img className="gh-avatar" src={ghU2.avatar_url} alt="" />}
-                  <div className="gh-info">
-                    <div className="gh-name">{ghU2?.name ?? ghU2?.login ?? "MdShaharali"}</div>
-                    <div className="gh-type">Owner · Contributor</div>
+              <div className="card github-card">
+                <a className="gh-clickable" href={ghU2?.html_url ?? "https://github.com/MdShaharali"} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
+                  <div className="gh-header">
+                    {ghU2?.avatar_url && <img className="gh-avatar" src={ghU2.avatar_url} alt="" />}
+                    <div className="gh-info">
+                      <div className="gh-name">{ghU2?.name ?? ghU2?.login ?? "MdShaharali"}</div>
+                      <div className="gh-type">Owner · Contributor</div>
+                    </div>
                   </div>
-                </div>
-                {ghU2?.bio && <div className="gh-desc">{ghU2.bio}</div>}
-                <div className="github-metrics github-metrics-4">
-                  <div className="gh-metric"><span className="gh-metric-label">Repos</span><span className="gh-metric-value">{ghU2?.public_repos ?? "—"}</span></div>
-                  <div className="gh-metric"><span className="gh-metric-label">Followers</span><span className="gh-metric-value">{ghU2?.followers ?? "—"}</span></div>
-                  <div className="gh-metric"><span className="gh-metric-label">Following</span><span className="gh-metric-value">{ghU2?.following ?? "—"}</span></div>
-                  <div className="gh-metric"><span className="gh-metric-label">Joined</span><span className="gh-metric-value">{ghU2 ? fmtDate(ghU2.created_at) : "—"}</span></div>
-                </div>
-              </a>
+                  {ghU2?.bio && <div className="gh-desc">{ghU2.bio}</div>}
+                  <div className="github-metrics github-metrics-4">
+                    <div className="gh-metric"><span className="gh-metric-label">Repos</span><span className="gh-metric-value">{ghU2?.public_repos ?? "—"}</span></div>
+                    <div className="gh-metric"><span className="gh-metric-label">Followers</span><span className="gh-metric-value">{ghU2?.followers ?? "—"}</span></div>
+                    <div className="gh-metric"><span className="gh-metric-label">Following</span><span className="gh-metric-value">{ghU2?.following ?? "—"}</span></div>
+                    <div className="gh-metric"><span className="gh-metric-label">Joined</span><span className="gh-metric-value">{ghU2 ? fmtDate(ghU2.created_at) : "—"}</span></div>
+                  </div>
+                </a>
+                <a className="btn btn-primary gh-follow-btn" href={`https://github.com/follow/MdShaharali`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                  Follow
+                </a>
+              </div>
             </div>
           </section>
         )}
