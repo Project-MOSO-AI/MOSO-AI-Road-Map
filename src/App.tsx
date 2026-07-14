@@ -542,7 +542,11 @@ export default function App() {
 }
 
 function AppInner() {
-  const { user, profile, isOwner, signInWithGitHub, signOut } = useAuth();
+  const { user, isOwner, signInWithGitHub, signOut } = useAuth();
+  const meta = user?.user_metadata;
+  const userName: string = meta?.full_name ?? meta?.name ?? meta?.login ?? "User";
+  const userAvatar: string | null = meta?.avatar_url ?? null;
+  const userLogin: string | null = meta?.login ?? meta?.user_name ?? null;
   useSupabaseSync();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showNotifHistory, setShowNotifHistory] = useState(false);
@@ -626,12 +630,12 @@ function AppInner() {
           {timerRunning ? "Session active" : "Session paused"}
         </div>
         <div style={{ padding: "12px 14px", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 10 }}>
-          {user && profile ? (
+          {user ? (
             <>
-              {profile.avatar_url && <img src={profile.avatar_url} alt="" style={{ width: 28, height: 28, borderRadius: "50%" }} />}
+              {userAvatar && <img src={userAvatar} alt="" style={{ width: 28, height: 28, borderRadius: "50%" }} />}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "0.72rem", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile.display_name ?? "User"}</div>
-                <div style={{ fontSize: "0.6rem", color: isOwner ? "var(--green-primary)" : "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{profile.role}</div>
+                <div style={{ fontSize: "0.72rem", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName}</div>
+                <div style={{ fontSize: "0.6rem", color: isOwner ? "var(--green-primary)" : "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{isOwner ? "owner" : "viewer"}</div>
               </div>
               <button className="btn btn-ghost" onClick={signOut} title="Sign out" style={{ padding: 4 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -648,11 +652,11 @@ function AppInner() {
 
         {/* Profile Bar */}
         <div className="profile-bar">
-          {user && profile ? (
+          {user ? (
             <div className="profile-bar-inner">
-              {profile.avatar_url && <img src={profile.avatar_url} alt="" className="profile-bar-avatar" />}
-              <span className="profile-bar-name">{profile.display_name ?? profile.login ?? "User"}</span>
-              <span className={`profile-bar-role ${profile.role}`}>{profile.role}</span>
+              {userAvatar && <img src={userAvatar} alt="" className="profile-bar-avatar" />}
+              <span className="profile-bar-name">{userName}</span>
+              <span className={`profile-bar-role ${isOwner ? "owner" : "viewer"}`}>{isOwner ? "owner" : "viewer"}</span>
               <button className="btn btn-ghost" onClick={signOut} style={{ marginLeft: 8, fontSize: "0.65rem", padding: "4px 10px" }}>Sign out</button>
             </div>
           ) : (
