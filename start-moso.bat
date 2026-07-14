@@ -2,16 +2,23 @@
 title MOSO AI Roadmap - Tunnel
 cd /d "%~dp0"
 
-echo [MOSO] Building Docker image if needed...
-docker build -t moso-roadmap . >nul 2>&1
+echo [MOSO] Installing dependencies...
+call npm install
 
-echo [MOSO] Starting container on port 8080...
-docker rm -f moso-roadmap >nul 2>&1
-docker run -d -p 8080:80 --name moso-roadmap moso-roadmap >nul 2>&1
+echo [MOSO] Building site...
+call npx vite build
 
-echo [MOSO] Waiting for container...
-timeout /t 3 /nobreak >nul
+echo [MOSO] Starting local server on port 3000...
+start "" /b cmd /c "cd /d "%~dp0" && node_modules\.bin\vite.cmd preview --port 3000 --host 0.0.0.0"
+
+echo [MOSO] Waiting for server...
+timeout /t 5 /nobreak >nul
 
 echo [MOSO] Starting Cloudflare Tunnel...
-echo Check tunnel-log.txt for your public URL after a few seconds.
-"C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8080 > tunnel-log.txt 2>&1
+echo.
+echo ============================================
+echo   Your site will be live at:
+echo   (check tunnel-log.txt for the URL)
+echo ============================================
+echo.
+"C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:3000

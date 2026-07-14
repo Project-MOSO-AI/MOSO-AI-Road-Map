@@ -4,3 +4,5 @@ dist
 *.log
 tunnel-log.txt
 tunnel-url.txt
+serve-log.txt
+tunnel-err.txt
