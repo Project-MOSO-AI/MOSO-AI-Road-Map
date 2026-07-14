@@ -21,21 +21,36 @@ export function useAuth() { return useContext(AuthContext); }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      setLoading(false);
+      if (session?.user) checkRole(session.user);
+      else setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      setLoading(false);
+      if (session?.user) checkRole(session.user);
+      else { setIsOwner(false); setLoading(false); }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  async function checkRole(authUser: User) {
+    const login = authUser.user_metadata?.login ?? authUser.user_metadata?.user_name ?? null;
+    const owner = login !== null && OWNER_LOGINS.includes(login);
+    setIsOwner(owner);
+
+    if (owner) {
+      await supabase.from("profiles").update({ role: "owner" }).eq("user_id", authUser.id);
+    }
+
+    setLoading(false);
+  }
 
   const signInWithGitHub = useCallback(async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -48,27 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signOut() {
     await supabase.auth.signOut();
     setUser(null);
+    setIsOwner(false);
   }
-
-  function getLogin(): string | null {
-    if (!user) return null;
-    const m = user.user_metadata;
-    return m?.login ?? m?.user_name ?? null;
-  }
-
-  function getAvatar(): string | null {
-    if (!user) return null;
-    return user.user_metadata?.avatar_url ?? null;
-  }
-
-  function getName(): string {
-    if (!user) return "User";
-    const m = user.user_metadata;
-    return m?.full_name ?? m?.name ?? m?.login ?? "User";
-  }
-
-  const login = getLogin();
-  const isOwner = login !== null && OWNER_LOGINS.includes(login);
 
   return (
     <AuthContext.Provider value={{ user, isOwner, loading, signInWithGitHub, signOut }}>
