@@ -50,6 +50,47 @@ Or with Docker:
 docker run -d -p 8080:80 --network host moso-roadmap
 ```
 
+## Host Online (Cloudflare Tunnel)
+
+Your laptop becomes the server. When it's on and online, the site is live. When it's off, the site goes down.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) installed and running
+- [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) installed and in PATH
+
+### Manual Start
+
+```bash
+# Windows
+start-moso.bat
+
+# The tunnel URL will be in tunnel-log.txt
+# Look for: https://xxxxx.trycloudflare.com
+```
+
+### Auto-Start on Boot
+
+Run this once in PowerShell (as Administrator) to create a Windows Scheduled Task:
+
+```powershell
+$action = New-ScheduledTaskAction -Execute "C:\Users\hshar\Documents\MOSO AI Roadmap\start-moso.bat"
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+Register-ScheduledTask -TaskName "MOSO Tunnel" -Action $action -Trigger $trigger -Settings $settings -Description "Start MOSO AI Roadmap tunnel on login"
+```
+
+After reboot, the tunnel starts automatically. Check `tunnel-log.txt` for the current URL.
+
+### How It Works
+
+1. `start-moso.bat` builds the Docker image, starts the container on port 8080, and launches `cloudflared`
+2. `cloudflared` creates a free tunnel to `*.trycloudflare.com`
+3. The Scheduled Task runs the script at login
+4. When your laptop goes offline, the tunnel dies. When it reconnects, reboot or re-run the script.
+
+> **Note:** Free tunnels give a new URL on each restart. For a fixed URL, buy a domain (~$10/yr) and set up a named Cloudflare tunnel.
+
 ## Tech Stack
 
 - React 18 + TypeScript
