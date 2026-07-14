@@ -9,7 +9,6 @@ export interface Profile {
   role: "owner" | "viewer";
   display_name: string | null;
   avatar_url: string | null;
-  login: string | null;
 }
 
 interface AuthCtx {
@@ -61,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!data) {
       const { data: inserted } = await supabase
         .from("profiles")
-        .insert({ user_id: authUser.id, role: isOrgOwner ? "owner" : "viewer", display_name: name, avatar_url: avatar, login })
+        .insert({ user_id: authUser.id, role: isOrgOwner ? "owner" : "viewer", display_name: name, avatar_url: avatar })
         .select()
         .single();
       data = inserted;
