@@ -4,7 +4,7 @@ import { useStore, type WorkSession } from "../store";
 
 let syncEnabled = false;
 
-export function enableSync() { syncEnabled = true; }
+function enableSync() { syncEnabled = true; }
 
 export function useSupabaseSync() {
   const initialized = useRef(false);

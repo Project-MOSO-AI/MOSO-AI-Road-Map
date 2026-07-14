@@ -5,7 +5,7 @@ import {
   type TreeNode, type NodeKind, type NodeStatus,
 } from "./graphData";
 import {
-  useStore, DEFAULT_VIEWPORT, todayHours, weeklyHours, monthlyHours,
+  useStore, todayHours, weeklyHours, monthlyHours,
   calendarData, calendarColor, recentCompleted,
 } from "./store";
 import { useAuth } from "./lib/auth";

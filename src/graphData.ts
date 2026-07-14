@@ -444,9 +444,8 @@ export function findNode(id: string): TreeNode | undefined {
 }
 
 // ── Layout constants ──
-export const LEVEL_H = 130;
-export const LEAF_W = 110;
-export const NODE_PAD = 10;
+const LEVEL_H = 130;
+const LEAF_W = 110;
 
 // ──────────────────────────────────────────────
 // Tree layout algorithm
