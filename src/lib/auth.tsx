@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
@@ -67,8 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (data && login) {
-      const isOrgMember = await checkOrgMembership(login);
-      if (isOrgMember && data.role !== "owner") {
+      const { isMember, token } = await checkOrgMembership(login, authUser);
+      if (isMember && data.role !== "owner") {
         await supabase.from("profiles").update({ role: "owner" }).eq("user_id", authUser.id);
         data = { ...data, role: "owner" };
       }
@@ -78,13 +78,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }
 
-  async function signInWithGitHub() {
-    const origin = window.location.origin;
-    await supabase.auth.signInWithOAuth({
+  const signInWithGitHub = useCallback(async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
-      options: { redirectTo: origin },
+      options: {
+        redirectTo: window.location.origin,
+        scopes: "read:org",
+      },
     });
-  }
+    if (error) console.error("OAuth error:", error.message);
+  }, []);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -99,15 +102,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-let orgCache: Record<string, boolean> = {};
-async function checkOrgMembership(login: string): Promise<boolean> {
+let orgCache: Record<string, { isMember: boolean; token: string | null }> = {};
+
+async function checkOrgMembership(login: string, authUser: User): Promise<{ isMember: boolean; token: string | null }> {
   if (login in orgCache) return orgCache[login];
+
+  // 1) Try with the user's GitHub provider token (catches private memberships)
+  const providerToken = (authUser as any).identities?.[0]?.identity_data?.access_token
+    ?? (authUser as any).app_metadata?.provider_token
+    ?? null;
+
+  if (providerToken) {
+    try {
+      const res = await fetch(`https://api.github.com/orgs/${ORG}/members/${login}`, {
+        headers: { Authorization: `Bearer ${providerToken}`, Accept: "application/vnd.github+json" },
+      });
+      if (res.status === 204) {
+        orgCache[login] = { isMember: true, token: providerToken };
+        return { isMember: true, token: providerToken };
+      }
+    } catch {}
+  }
+
+  // 2) Fall back to public membership check
   try {
     const res = await fetch(`https://api.github.com/orgs/${ORG}/public_members/${login}`);
     const ok = res.status === 204;
-    orgCache[login] = ok;
-    return ok;
+    orgCache[login] = { isMember: ok, token: providerToken };
+    return { isMember: ok, token: providerToken };
   } catch {
-    return false;
+    orgCache[login] = { isMember: false, token: providerToken };
+    return { isMember: false, token: providerToken };
   }
 }
