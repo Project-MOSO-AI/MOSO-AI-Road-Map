@@ -193,6 +193,22 @@ function GraphCanvas({ searchQuery, filterStatus, filterTech }: {
 
   const onMouseUp = useCallback(() => setDragging(false), []);
 
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    if ((e.target as Element).closest(".graph-node-group")) return;
+    const t = e.touches[0];
+    setDragging(true);
+    didDrag.current = false;
+    setDragStart({ x: t.clientX, y: t.clientY });
+    setPanStart({ x: viewport.x, y: viewport.y });
+  }, [viewport.x, viewport.y]);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!dragging) return;
+    const t = e.touches[0];
+    if (Math.abs(t.clientX - dragStart.x) + Math.abs(t.clientY - dragStart.y) > 3) didDrag.current = true;
+    store.setViewport({ ...viewport, x: panStart.x + (t.clientX - dragStart.x), y: panStart.y + (t.clientY - dragStart.y) });
+  }, [dragging, dragStart, panStart, viewport, store]);
+
   const fitView = useCallback(() => {
     const svg = svgRef.current;
     if (!svg) return;
@@ -286,7 +302,8 @@ function GraphCanvas({ searchQuery, filterStatus, filterTech }: {
     <div className="graph-container">
       <svg ref={svgRef} viewBox="0 0 2000 1200"
         onWheel={handleWheel} onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}>
+        onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
+        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onMouseUp}>
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
@@ -1128,7 +1145,7 @@ function AppInner() {
         <div style={{ padding: "12px 14px", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 10 }}>
           {user ? (
             <>
-              {userAvatar && <img src={userAvatar} alt="" style={{ width: 28, height: 28, borderRadius: "50%" }} />}
+              {userAvatar && <img src={userAvatar} alt={userName} style={{ width: 28, height: 28, borderRadius: "50%" }} />}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "0.72rem", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName}</div>
                 <div style={{ fontSize: "0.6rem", color: isOwner ? "var(--green-primary)" : "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{isOwner ? "owner" : "viewer"}</div>
@@ -1158,7 +1175,7 @@ function AppInner() {
         <div className="profile-bar">
           {user ? (
             <div className="profile-bar-inner">
-              {userAvatar && <img src={userAvatar} alt="" className="profile-bar-avatar" />}
+              {userAvatar && <img src={userAvatar} alt={userName} className="profile-bar-avatar" />}
               <span className="profile-bar-name">{userName}</span>
               <span className={`profile-bar-role ${isOwner ? "owner" : "viewer"}`}>{isOwner ? "owner" : "viewer"}</span>
               <button className="btn btn-ghost" onClick={signOut} style={{ marginLeft: 8, fontSize: "0.65rem", padding: "4px 10px" }}>Sign out</button>
@@ -1187,11 +1204,11 @@ function AppInner() {
                 </div>
                 <div className="timer-actions">
                   {!timerRunning ? (
-                    <button className="btn btn-primary" onClick={() => { if (!user || !isOwner) { requestLogin(); return; } store.startTimer(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}><I.Play /> {timerSeconds > 0 ? "Resume" : "Start"}</button>
+                    <button className="btn btn-primary" onClick={() => { if (!user || !isOwner) { if (!user) { requestLogin(); } else { store.addNotification("Timer is owner-only", "warning"); } return; } store.startTimer(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}><I.Play /> {timerSeconds > 0 ? "Resume" : "Start"}</button>
                   ) : (
-                    <button className="btn btn-warning" onClick={() => { if (!user || !isOwner) { requestLogin(); return; } store.pauseTimer(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}><I.Pause /> Pause</button>
+                    <button className="btn btn-warning" onClick={() => { if (!user || !isOwner) { if (!user) { requestLogin(); } else { store.addNotification("Timer is owner-only", "warning"); } return; } store.pauseTimer(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}><I.Pause /> Pause</button>
                   )}
-                  <button className="btn btn-danger" onClick={() => { if (!user || !isOwner) { requestLogin(); return; } store.stopTimer(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}><I.Stop /> Stop</button>
+                  <button className="btn btn-danger" onClick={() => { if (!user || !isOwner) { if (!user) { requestLogin(); } else { store.addNotification("Timer is owner-only", "warning"); } return; } store.stopTimer(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}><I.Stop /> Stop</button>
                 </div>
               </div>
             </div>
@@ -1335,7 +1352,7 @@ function AppInner() {
             {/* Org Card — full width */}
             <a className="card github-card gh-clickable gh-card-org" href={ghOrg?.html_url ?? "https://github.com/Project-MOSO-AI"} target="_blank" rel="noreferrer">
               <div className="gh-header">
-                {ghOrg?.avatar_url && <img className="gh-avatar gh-avatar-lg" src={ghOrg.avatar_url} alt="" />}
+                {ghOrg?.avatar_url && <img className="gh-avatar gh-avatar-lg" src={ghOrg.avatar_url} alt={ghOrg?.name ?? "Organization"} />}
                 <div className="gh-info">
                   <div className="gh-name">{ghOrg?.name ?? "Project-MOSO-AI"}</div>
                   <div className="gh-type">Organization</div>
@@ -1371,7 +1388,7 @@ function AppInner() {
               <div className="card github-card">
                 <a className="gh-clickable" href={ghU1?.html_url ?? "https://github.com/Harsha240105"} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
                   <div className="gh-header">
-                    {ghU1?.avatar_url && <img className="gh-avatar" src={ghU1.avatar_url} alt="" />}
+                    {ghU1?.avatar_url && <img className="gh-avatar" src={ghU1.avatar_url} alt={ghU1?.name ?? ghU1?.login ?? "User"} />}
                     <div className="gh-info">
                       <div className="gh-name">{ghU1?.name ?? ghU1?.login ?? "Harsha240105"}</div>
                       <div className="gh-type">Owner · Founder</div>
@@ -1395,7 +1412,7 @@ function AppInner() {
               <div className="card github-card">
                 <a className="gh-clickable" href={ghU2?.html_url ?? "https://github.com/MdShaharali"} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
                   <div className="gh-header">
-                    {ghU2?.avatar_url && <img className="gh-avatar" src={ghU2.avatar_url} alt="" />}
+                    {ghU2?.avatar_url && <img className="gh-avatar" src={ghU2.avatar_url} alt={ghU2?.name ?? ghU2?.login ?? "User"} />}
                     <div className="gh-info">
                       <div className="gh-name">{ghU2?.name ?? ghU2?.login ?? "MdShaharali"}</div>
                       <div className="gh-type">Owner · Contributor</div>
@@ -1433,7 +1450,7 @@ function AppInner() {
                 Sessions: {sessions.length} · Notifications: {notifications.length} · Tasks: {Object.keys(taskStates).length}
               </div>
               <div style={{ marginTop: 12 }}>
-                <button className="btn btn-danger" onClick={() => { if (!user || !isOwner) { requestLogin(); return; } localStorage.clear(); location.reload(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}>Clear All Data & Reload</button>
+                <button className="btn btn-danger" onClick={() => { if (!user || !isOwner) { requestLogin(); return; } if (!confirm("This will erase all local data and reload. Continue?")) return; localStorage.clear(); location.reload(); }} title={!user ? "Login to use" : !isOwner ? "Owners only" : ""}>Clear All Data & Reload</button>
               </div>
             </div>
           </section>
