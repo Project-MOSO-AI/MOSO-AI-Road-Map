@@ -15,7 +15,7 @@ import { useSupabaseSync } from "./lib/sync";
 // Types
 // ──────────────────────────────────────────────────────────────
 
-type Page = "dashboard" | "network" | "technologies" | "github" | "settings";
+type Page = "dashboard" | "network" | "technologies" | "github" | "settings" | "now";
 
 interface GitHubOrg { login: string; name: string; avatar_url: string; description: string; public_repos: number; followers: number; created_at: string; html_url: string; }
 interface GitHubRepo { full_name: string; description: string; stargazers_count: number; forks_count: number; open_issues_count: number; pushed_at: string; language: string; html_url: string; default_branch: string; }
@@ -90,6 +90,7 @@ const I = {
   Search: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
   Bell: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
   Chevron: () => <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 18 15 12 9 6"/></svg>,
+  Book: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
 };
 
 // ──────────────────────────────────────────────────────────────
@@ -533,6 +534,496 @@ function LoginPrompt({ onClose, signInWithGitHub, loading, user, isOwner, authEr
 }
 
 // ──────────────────────────────────────────────────────────────
+// Documentation / Now Page
+// ──────────────────────────────────────────────────────────────
+
+const DOCS_SECTIONS = [
+  { id: "overview", label: "Overview" },
+  { id: "quick-start", label: "Quick Start" },
+  { id: "features", label: "Features" },
+  { id: "architecture", label: "Architecture" },
+  { id: "trust", label: "Trust & Safety" },
+  { id: "api", label: "API Reference" },
+  { id: "extend", label: "Extending MOSO" },
+  { id: "faq", label: "FAQ" },
+] as const;
+
+const FEATURE_CARDS = [
+  { icon: "💬", title: "Conversational Chat + Memory", desc: "Talk to MOSO by typing or speaking. It remembers facts, preferences, and workflows across sessions — all stored locally.", color: "var(--green-primary)" },
+  { icon: "🖥️", title: "Computer Use & Automation", desc: "Move the mouse, type, click, scroll, take screenshots, manage windows. Every command is decomposed into verified steps.", color: "#00BFFF" },
+  { icon: "👁️", title: "Screen Vision (OCR)", desc: "MOSO reads your screen with OCR, classifies text into buttons/fields/links, and detects the active window.", color: "#FFC107" },
+  { icon: "🤖", title: "Autonomous Agents", desc: "Multi-step goals broken into ordered task plans with dependencies, retries, and per-step verification.", color: "#FF6B6B" },
+  { icon: "🎓", title: "Teach Mode", desc: "Perform a workflow once, and MOSO generalizes it into a reusable recipe with variables and trigger phrases.", color: "#C792EA" },
+  { icon: "🎤", title: "Voice Interaction", desc: "Local transcription, pronoun resolution using desktop context, dual text+voice output.", color: "#82AAFF" },
+  { icon: "📊", title: "System Intelligence", desc: "Ask about hardware, software, network, storage, or security in plain language.", color: "var(--green-accent)" },
+  { icon: "🔒", title: "Risk & Privacy Engine", desc: "Every action is risk-scored before execution. High/Critical actions are blocked automatically.", color: "var(--error)" },
+];
+
+function NowPage() {
+  const [activeSection, setActiveSection] = useState("overview");
+  const [expandedFeature, setExpandedFeature] = useState<number | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const scrollTo = (id: string) => {
+    setActiveSection(id);
+    const el = contentRef.current?.querySelector(`[data-docs-id="${id}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return (
+    <section className="page-stack">
+      {/* Hero */}
+      <div className="now-hero">
+        <div className="now-hero-glow" />
+        <div className="now-hero-content">
+          <div className="now-hero-badge">Documentation</div>
+          <h1 className="now-hero-title">
+            <span className="now-hero-line">MOSO AI</span>
+            <span className="now-hero-line now-hero-accent">Documentation</span>
+          </h1>
+          <p className="now-hero-sub">
+            Privacy-first, local-first AI assistant that runs entirely on your device.
+            It sees your screen, remembers your context, and carries out multi-step tasks —
+            without your data ever leaving the machine.
+          </p>
+          <div className="now-hero-actions">
+            <button className="btn btn-primary now-hero-btn" onClick={() => scrollTo("quick-start")}>
+              Get Started
+            </button>
+            <button className="btn btn-ghost now-hero-btn" onClick={() => scrollTo("features")}>
+              Explore Features
+            </button>
+          </div>
+        </div>
+        <div className="now-hero-orb">
+          <div className="now-orb-ring now-orb-ring-1" />
+          <div className="now-orb-ring now-orb-ring-2" />
+          <div className="now-orb-ring now-orb-ring-3" />
+          <div className="now-orb-core" />
+        </div>
+      </div>
+
+      <div className="now-layout">
+        {/* Docs sidebar nav */}
+        <nav className="now-sidebar">
+          {DOCS_SECTIONS.map((s) => (
+            <button key={s.id} className={`now-sidebar-btn${activeSection === s.id ? " active" : ""}`}
+              onClick={() => scrollTo(s.id)}>
+              {s.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Docs content */}
+        <div className="now-content" ref={contentRef}>
+
+          {/* ── Overview ── */}
+          <div className="now-section" data-docs-id="overview">
+            <div className="now-section-eyebrow">Overview</div>
+            <h2 className="now-section-title">What is MOSO?</h2>
+            <div className="now-card">
+              <p className="now-text">
+                <strong style={{ color: "var(--green-primary)" }}>MOSO</strong> is a privacy-first, local-first AI assistant
+                that runs entirely on your device. It reads your screen with OCR, understands what app you're in,
+                remembers facts and preferences across sessions, and can plan and execute multi-step desktop tasks —
+                all through natural conversation, by voice or text.
+              </p>
+              <div className="now-highlight-box">
+                <div className="now-highlight-label">Key Differentiator</div>
+                <p className="now-text">
+                  Every action is risk-scored and permission-gated before it happens, and every action is logged.
+                  Your data never leaves your machine.
+                </p>
+              </div>
+            </div>
+            <div className="now-quick-facts">
+              {[
+                ["Runtime", "100% local via llama.cpp (CPU) or ONNX Runtime (GPU/CPU)"],
+                ["UI Framework", "PySide6 — the floating \"Aura\" orb + chat bubble"],
+                ["Primary Language", "Python 3.12+"],
+                ["Optional Backend", "FastAPI, Dockerized"],
+                ["Test Suite", "249+ automated tests (python run.py test)"],
+                ["Status", "Pre-1.0, active development (v0.3.0)"],
+              ].map(([label, value]) => (
+                <div key={label} className="now-fact">
+                  <span className="now-fact-label">{label}</span>
+                  <span className="now-fact-value">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Quick Start ── */}
+          <div className="now-section" data-docs-id="quick-start">
+            <div className="now-section-eyebrow">Getting Started</div>
+            <h2 className="now-section-title">Quick Start</h2>
+            <div className="now-steps">
+              {[
+                { step: 1, title: "Prerequisites", content: "Python 3.12+ must be installed on your system." },
+                { step: 2, title: "Clone & Install", content: "Clone the repo, create a virtual environment, and install dependencies.", code: "git clone https://github.com/Project-MOSO-AI/MOSO.git\ncd MOSO\npython -m venv venv\nvenv\\Scripts\\activate        # Windows\npip install -r moso_core/requirements.txt" },
+                { step: 3, title: "Get a Model", content: "Download a local GGUF model. Use a small ~2GB model for speed, or a larger ~7.5GB model for stronger reasoning." },
+                { step: 4, title: "Run MOSO", content: "Launch the Aura desktop orb, run module demos, or execute the test suite.", code: "python run.py            # Launch Aura orb\npython run.py demo       # Run module demos\npython run.py test       # Run test suite (249+ tests)" },
+                { step: 5, title: "First Launch", content: "The orb appears on your desktop. MOSO reports which modules are active: Memory, Tools, Agents, Vision, System Intelligence, Risk Engine, Realtime, Identity, LLM." },
+              ].map(({ step, title, content, code }) => (
+                <div key={step} className="now-step">
+                  <div className="now-step-num">{step}</div>
+                  <div className="now-step-body">
+                    <div className="now-step-title">{title}</div>
+                    <p className="now-text">{content}</p>
+                    {code && <pre className="now-code"><code>{code}</code></pre>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Features ── */}
+          <div className="now-section" data-docs-id="features">
+            <div className="now-section-eyebrow">Capabilities</div>
+            <h2 className="now-section-title">Features</h2>
+            <div className="now-feature-grid">
+              {FEATURE_CARDS.map((f, i) => (
+                <div key={i} className={`now-feature-card${expandedFeature === i ? " expanded" : ""}`}
+                  onClick={() => setExpandedFeature(expandedFeature === i ? null : i)}
+                  style={{ animationDelay: `${i * 0.06}s` }}>
+                  <div className="now-feature-icon" style={{ color: f.color }}>{f.icon}</div>
+                  <div className="now-feature-title" style={{ color: f.color }}>{f.title}</div>
+                  <p className="now-text">{f.desc}</p>
+                  {expandedFeature === i && (
+                    <div className="now-feature-detail">
+                      <FeatureDetail index={i} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Architecture ── */}
+          <div className="now-section" data-docs-id="architecture">
+            <div className="now-section-eyebrow">Under the Hood</div>
+            <h2 className="now-section-title">Architecture</h2>
+            <div className="now-card">
+              <h3 className="now-subtitle">The Core Loop</h3>
+              <p className="now-text">Every task MOSO performs follows a seven-step loop:</p>
+              <div className="now-loop">
+                {["Observe", "Reason", "Act", "Verify", "Reflect", "Learn", "Improve"].map((step, i) => (
+                  <div key={step} className="now-loop-step" style={{ animationDelay: `${i * 0.08}s` }}>
+                    <span className="now-loop-num">{i + 1}</span>
+                    <span className="now-loop-label">{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="now-card" style={{ marginTop: 16 }}>
+              <h3 className="now-subtitle">The Seven Organs</h3>
+              <div className="now-organs-grid">
+                {[
+                  ["Brain", "Plans, reasons, reflects, decides", "Never touches hardware directly"],
+                  ["Eyes", "Observes — screen OCR, UI/window detection, system state", "Never performs actions"],
+                  ["Muscles", "Executes — mouse, keyboard, browser, shell, filesystem", "Never makes decisions"],
+                  ["Memory", "Three stores — Experience, Skills, Knowledge — plus a vector index", "Never mixes the three stores"],
+                  ["Learning", "Seven sub-engines: Experience, Reflection, Skill Builder, Generalization, Optimizer, Curriculum, Evaluation", "Never skips reflection before storing a skill"],
+                  ["Safety", "Permissions, risk scoring, privacy checks, identity, confirmation", "Never lets an unscored action run"],
+                  ["UI", "Aura orb, chat, voice, status — talks to the user", "Never talks directly to hardware"],
+                ].map(([organ, does, never]) => (
+                  <div key={organ} className="now-organ">
+                    <div className="now-organ-name">{organ}</div>
+                    <div className="now-organ-does">{does}</div>
+                    <div className="now-organ-never">{never}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Trust & Safety ── */}
+          <div className="now-section" data-docs-id="trust">
+            <div className="now-section-eyebrow">Security</div>
+            <h2 className="now-section-title">Trust & Safety</h2>
+            <div className="now-trust-grid">
+              {[
+                { title: "Local by Default", desc: "Inference, memory, OCR, and audit logs all live on-device. No cloud round-trip required for MOSO to function.", icon: "🏠" },
+                { title: "Risk-Scored Actions", desc: "Low (allowed), Medium (flagged), High (blocked), Critical (blocked). Scoring considers destination reputation, credential exposure, and system load.", icon: "⚖️" },
+                { title: "Permission Tiers", desc: "Tools require guest, trusted, or owner identity level depending on sensitivity. Listing files is guest; deleting is owner.", icon: "🔑" },
+                { title: "Full Audit Trail", desc: "Every tool call is written to a local JSON-lines audit log with timestamp, actor, action, target, and result.", icon: "📋" },
+              ].map((item, i) => (
+                <div key={i} className="now-trust-card" style={{ animationDelay: `${i * 0.08}s` }}>
+                  <div className="now-trust-icon">{item.icon}</div>
+                  <div className="now-trust-title">{item.title}</div>
+                  <p className="now-text">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+            <div className="now-card" style={{ marginTop: 16 }}>
+              <h3 className="now-subtitle">Owner Verification</h3>
+              <p className="now-text">
+                MOSO distinguishes "you" from a guest using five weighted signals:
+              </p>
+              <div className="now-verify-grid">
+                {[
+                  ["Voice Biometrics", "35%"],
+                  ["Liveness / Anti-Spoofing", "20%"],
+                  ["Behavioral Biometrics", "20%"],
+                  ["Device Presence", "15%"],
+                  ["Historical Patterns", "10%"],
+                ].map(([signal, weight]) => (
+                  <div key={signal} className="now-verify-item">
+                    <div className="now-verify-weight">{weight}</div>
+                    <div className="now-verify-label">{signal}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="now-verify-levels">
+                <span className="now-level owner">Owner ≥ 95</span>
+                <span className="now-level likely">Likely Owner 80–94</span>
+                <span className="now-level guest">Guest 60–79</span>
+                <span className="now-level unknown">Unknown &lt; 60</span>
+              </div>
+            </div>
+            <div className="now-card" style={{ marginTop: 16 }}>
+              <h3 className="now-subtitle">Data Storage</h3>
+              <div className="now-data-map">
+                {[
+                  ["memory.db", "Episodic / semantic / procedural / preference memory"],
+                  ["plans.db", "Agent goals and tasks"],
+                  ["vector_store.db", "Embeddings for hybrid search"],
+                  ["realtime_cache.db", "Cached web research"],
+                  ["knowledge_graph.db", "Entities / relationships / events"],
+                  ["inventory.db", "System snapshots"],
+                  ["tools-audit.log", "Full audit trail"],
+                  ["aura_settings.json", "User preferences / config"],
+                ].map(([file, desc]) => (
+                  <div key={file} className="now-data-item">
+                    <span className="now-data-file">{file}</span>
+                    <span className="now-data-desc">{desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── API Reference ── */}
+          <div className="now-section" data-docs-id="api">
+            <div className="now-section-eyebrow">Advanced</div>
+            <h2 className="now-section-title">API Reference</h2>
+            <div className="now-card">
+              <h3 className="now-subtitle">REST Endpoints</h3>
+              <p className="now-text" style={{ marginBottom: 16 }}>
+                MOSO can run headless behind a FastAPI REST API for self-hosting or programmatic access.
+              </p>
+              <div className="now-api-table">
+                <div className="now-api-header">
+                  <span>Endpoint</span><span>Method</span><span>Purpose</span>
+                </div>
+                {[
+                  ["/health", "GET", "Health check + active modules"],
+                  ["/chat", "POST", "Send a message, get a reply"],
+                  ["/execute", "POST", "Run a specific tool action"],
+                  ["/plan", "POST", "Create and execute a multi-step plan"],
+                  ["/memory/store", "POST", "Store an episodic/semantic/procedural memory"],
+                  ["/memory/search", "POST", "Search memory"],
+                  ["/memory/recent", "GET", "Recent memory events"],
+                  ["/memory/preferences", "GET", "Stored preferences"],
+                  ["/skills", "GET", "Learned procedural skills"],
+                  ["/system", "GET", "Live resource status"],
+                  ["/identity", "GET", "Current identity/confidence/owner status"],
+                ].map(([ep, method, purpose]) => (
+                  <div key={ep} className="now-api-row">
+                    <span className="now-api-ep">{ep}</span>
+                    <span className={`now-api-method ${method.toLowerCase()}`}>{method}</span>
+                    <span className="now-api-purpose">{purpose}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="now-card" style={{ marginTop: 16 }}>
+              <h3 className="now-subtitle">Docker Deployment</h3>
+              <pre className="now-code"><code>{`# Dev mode (hot-reload, verbose logs)
+docker compose -f docker-compose.dev.yml up
+
+# Production (built image, resource-limited, persistent volumes)
+docker compose -f docker-compose.prod.yml up -d`}</code></pre>
+            </div>
+          </div>
+
+          {/* ── Extending MOSO ── */}
+          <div className="now-section" data-docs-id="extend">
+            <div className="now-section-eyebrow">Developer</div>
+            <h2 className="now-section-title">Extending MOSO</h2>
+            <div className="now-card">
+              <h3 className="now-subtitle">The Orchestrator Pattern</h3>
+              <p className="now-text">
+                One central object; every capability is opt-in via <code className="now-inline-code">enable_*()</code> calls.
+              </p>
+              <pre className="now-code"><code>{`from moso.orchestration.orchestrator import Orchestrator
+
+orch = Orchestrator(model="local")
+orch.enable_memory()
+orch.enable_tools()
+orch.enable_agents()
+orch.enable_computer_use()
+orch.enable_vision()
+orch.enable_system_intelligence()
+orch.enable_risk_engine()
+
+response = orch.process("Open Spotify and play my liked songs")
+print(response)`}</code></pre>
+            </div>
+            <div className="now-cards-row">
+              <div className="now-card">
+                <h3 className="now-subtitle">Adding a Tool</h3>
+                <p className="now-text">
+                  Subclass <code className="now-inline-code">Tool</code>, declare a permission level per action,
+                  implement <code className="now-inline-code">execute()</code>, and register with the <code className="now-inline-code">ToolRegistry</code>.
+                </p>
+              </div>
+              <div className="now-card">
+                <h3 className="now-subtitle">Adding a Smart Controller</h3>
+                <p className="now-text">
+                  Per-app intelligence (like the built-in Spotify/Chrome/Explorer controllers) —
+                  perception-aware handlers keyed by app name.
+                </p>
+              </div>
+            </div>
+            <div className="now-card" style={{ marginTop: 16 }}>
+              <h3 className="now-subtitle">Memory API</h3>
+              <pre className="now-code"><code>{`orch.memory.store_event("User opened Chrome")
+orch.memory.store_fact("User prefers dark mode")
+orch.memory.store_procedure("morning_routine", steps=[...])
+orch.memory.store_preference("theme", "dark")
+
+memories = orch.memory.retrieve_memories("browser settings")
+context  = orch.memory.build_context("What theme do I use?")`}</code></pre>
+            </div>
+            <div className="now-card" style={{ marginTop: 16 }}>
+              <h3 className="now-subtitle">Swapping the LLM Provider</h3>
+              <p className="now-text">
+                The <code className="now-inline-code">LLMProvider</code> abstraction supports local (llama.cpp),
+                OpenAI, Anthropic, Ollama, or a custom backend behind one interface.
+              </p>
+            </div>
+          </div>
+
+          {/* ── FAQ ── */}
+          <div className="now-section" data-docs-id="faq">
+            <div className="now-section-eyebrow">Help</div>
+            <h2 className="now-section-title">FAQ</h2>
+            <div className="now-faq-list">
+              {[
+                { q: "Does my data leave my device?", a: "No. Inference, memory, OCR, and audit logs all live on-device. The only feature that reaches the internet is real-time web research, which is clearly marked when used." },
+                { q: "Why isn't my microphone detected?", a: "MOSO requires a connected microphone for voice mode. If none is found, it automatically falls back to text input. Check your OS sound settings and ensure the mic is enabled." },
+                { q: "Why did MOSO block an action?", a: "Actions scoring HIGH or CRITICAL on the risk engine are blocked automatically. This protects against credential exposure, sensitive file paths, or untrusted destinations. Check the audit log for details." },
+                { q: "How do I add a model?", a: "Download a GGUF model file and point MOSO at it via settings, or use the built-in model manager: list, download, and remove models from the command line." },
+                { q: "Can MOSO control any app, or only ones it knows about?", a: "MOSO has built-in smart controllers for common apps (Spotify, Chrome, Explorer). For other apps, it uses generic mouse/keyboard/screen capture to interact with any visible UI element." },
+              ].map(({ q, a }, i) => (
+                <div key={i} className="now-faq-item">
+                  <div className="now-faq-q">{q}</div>
+                  <p className="now-text">{a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeatureDetail({ index }: { index: number }) {
+  const details: Record<number, React.ReactNode> = {
+    0: (
+      <>
+        <div className="now-detail-title">Memory Types</div>
+        <div className="now-detail-list">
+          <span className="now-tag">Episodic</span>
+          <span className="now-tag">Semantic</span>
+          <span className="now-tag">Procedural</span>
+          <span className="now-tag">Preferences</span>
+        </div>
+        <p className="now-text">Hybrid SQLite full-text + vector-embedding search retrieves the most relevant memories for every reply.</p>
+        <pre className="now-code"><code>{`"What theme do I use?" → finds "user prefers dark mode"\n"MOSO remembers user prefers dark mode"`}</code></pre>
+      </>
+    ),
+    1: (
+      <>
+        <div className="now-detail-title">Example Commands</div>
+        <div className="now-detail-list">
+          <span className="now-tag">"Open Spotify and play my liked songs"</span>
+          <span className="now-tag">"Take a screenshot"</span>
+          <span className="now-tag">"Open Notepad and type 1 to 10"</span>
+        </div>
+        <p className="now-text">Every command becomes a full chain: open → wait → find element → click → verify. Each step is screenshotted and OCR-verified before MOSO moves on.</p>
+      </>
+    ),
+    2: (
+      <>
+        <div className="now-detail-title">OCR Pipeline</div>
+        <p className="now-text">Tesseract OCR classifies visible text into buttons / text fields / links / labels. Detects active window, open windows, and dialogs.</p>
+        <div className="now-detail-list">
+          <span className="now-tag">"What's on my screen?"</span>
+          <span className="now-tag">"What app am I using?"</span>
+        </div>
+      </>
+    ),
+    3: (
+      <>
+        <div className="now-detail-title">Agent Capabilities</div>
+        <p className="now-text">Decomposes goals into ordered task plans with dependencies and automatic retries. Each step verified before the next runs.</p>
+        <div className="now-detail-list">
+          <span className="now-tag">Dry Run Preview</span>
+          <span className="now-tag">7 Built-in Templates</span>
+          <span className="now-tag">Per-step Verification</span>
+        </div>
+      </>
+    ),
+    4: (
+      <>
+        <div className="now-detail-title">Teach Flow</div>
+        <div className="now-detail-steps">
+          <span className="now-tag">1. Type /teach &lt;name&gt;</span>
+          <span className="now-tag">2. Perform the task once</span>
+          <span className="now-tag">3. Type /done</span>
+          <span className="now-tag">4. MOSO generalizes into a recipe</span>
+        </div>
+        <p className="now-text">MOSO identifies fixed steps vs. variables (like contact names), writes verification conditions, and suggests natural-language trigger phrases.</p>
+      </>
+    ),
+    5: (
+      <>
+        <div className="now-detail-title">Voice Pipeline</div>
+        <p className="now-text">Local transcription via faster-whisper, pronoun resolution using desktop context ("pause it" → currently-playing media), ~500ms target latency. Every voice exchange is mirrored to the chat bubble.</p>
+        <div className="now-detail-list">
+          <span className="now-tag">Space = Push-to-Talk</span>
+          <span className="now-tag">Local STT</span>
+          <span className="now-tag">edge-tts</span>
+        </div>
+      </>
+    ),
+    6: (
+      <>
+        <div className="now-detail-title">System Introspection</div>
+        <p className="now-text">Ask in plain language: "what's my RAM", "am I safe", "what's using my disk". Full diagnostics pass with severity-ranked suggestions. Timestamped inventory snapshots you can diff later.</p>
+      </>
+    ),
+    7: (
+      <>
+        <div className="now-detail-title">Risk Levels</div>
+        <div className="now-detail-steps">
+          <span className="now-tag" style={{ color: "var(--green-primary)" }}>LOW — Allowed silently</span>
+          <span className="now-tag" style={{ color: "var(--warning)" }}>MEDIUM — Allowed with warning</span>
+          <span className="now-tag" style={{ color: "var(--error)" }}>HIGH — Blocked</span>
+          <span className="now-tag" style={{ color: "var(--error)" }}>CRITICAL — Blocked</span>
+        </div>
+        <p className="now-text">Scoring considers destination reputation, file-path sensitivity, credential exposure, required permission level, and current system load.</p>
+      </>
+    ),
+  };
+  return <>{details[index] ?? <p className="now-text">Details coming soon.</p>}</>;
+}
+
+// ──────────────────────────────────────────────────────────────
 // App
 // ──────────────────────────────────────────────────────────────
 
@@ -620,7 +1111,7 @@ function AppInner() {
         </div>
         <div className="sidebar-section-label">Navigation</div>
         <nav className="nav-list">
-          {([["dashboard", "Dashboard", I.Dash], ["network", "Neural Network", I.Net], ["technologies", "Technologies", I.Tech], ["github", "GitHub", I.Git], ["settings", "Settings", I.Set]] as const).map(([id, label, Icon]) => (
+          {([["dashboard", "Dashboard", I.Dash], ["network", "Neural Network", I.Net], ["now", "Documentation", I.Book], ["technologies", "Technologies", I.Tech], ["github", "GitHub", I.Git], ["settings", "Settings", I.Set]] as const).map(([id, label, Icon]) => (
             <button key={id} className={`nav-button${currentPage === id ? " active" : ""}`} onClick={() => store.setPage(id)}>
               <Icon />{label}
             </button>
@@ -925,6 +1416,11 @@ function AppInner() {
               </div>
             </div>
           </section>
+        )}
+
+        {/* ═══ Documentation / Now ═══ */}
+        {currentPage === "now" && (
+          <NowPage />
         )}
 
         {/* ═══ Settings ═══ */}
